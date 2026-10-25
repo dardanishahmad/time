@@ -1,0 +1,622 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TimePro | Duration Calculator</title>
+
+<style>
+:root {
+    --bg: #f3f5fb;
+    --card: #ffffff;
+    --text: #20243a;
+    --muted: #737b91;
+    --primary: #6558e8;
+    --border: #e5e8f2;
+    --soft: #f0efff;
+}
+
+body.dark {
+    --bg: #151827;
+    --card: #22263a;
+    --text: #f4f5ff;
+    --muted: #a9afc5;
+    --primary: #9287ff;
+    --border: #383d55;
+    --soft: #30304f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 24px 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: system-ui, Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    transition: background .25s, color .25s;
+}
+
+.app { width: 100%; max-width: 510px; }
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.brand {
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.brand span { color: var(--primary); }
+
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 19px;
+    cursor: pointer;
+}
+
+.clock-card, .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 23px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 28px rgba(40, 45, 90, .04);
+}
+
+.clock-card {
+    color: white;
+    border: none;
+    background: linear-gradient(120deg, #6558e8, #9583fa);
+}
+
+.eyebrow {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: .8;
+}
+
+.clock {
+    font-size: 35px;
+    font-weight: 750;
+    margin: 5px 0;
+    font-variant-numeric: tabular-nums;
+}
+
+h1 { font-size: 24px; margin: 0 0 7px; }
+h2 { font-size: 17px; margin: 0 0 18px; }
+p { color: var(--muted); line-height: 1.5; }
+
+.subtitle { margin: 0 0 22px; font-size: 14px; }
+
+label {
+    display: block;
+    font-size: 13px;
+    font-weight: 650;
+    margin: 15px 0 8px;
+}
+
+input {
+    width: 100%;
+    min-width: 0;
+    padding: 13px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(101, 88, 232, .12);
+}
+
+.time-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.preset {
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.preset:hover { border-color: var(--primary); }
+
+.primary-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 23px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: white;
+    font: inherit;
+    font-weight: 750;
+    cursor: pointer;
+    transition: transform .15s, opacity .15s;
+}
+
+.primary-btn:hover { opacity: .9; }
+.primary-btn:active { transform: scale(.98); }
+
+.break-note { font-size: 12px; margin: 7px 0 0; }
+
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.small-btn {
+    border: none;
+    background: transparent;
+    color: var(--primary);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.history-item:last-child { border-bottom: none; }
+
+.history-item strong { display: block; font-size: 14px; }
+.history-item small { color: var(--muted); display: block; margin-top: 4px; }
+.history-duration { color: var(--primary); font-weight: 750; white-space: nowrap; }
+
+.empty { font-size: 13px; margin: 0; }
+
+footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 6px 0 0;
+}
+
+/* Result dialog */
+
+dialog {
+    width: calc(100% - 30px);
+    max-width: 390px;
+    padding: 26px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: var(--card);
+    color: var(--text);
+    text-align: center;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, .25);
+}
+
+dialog::backdrop {
+    background: rgba(13, 16, 35, .65);
+    backdrop-filter: blur(4px);
+}
+
+.result-icon { font-size: 36px; margin-bottom: 8px; }
+
+.result-time {
+    color: var(--primary);
+    font-size: 43px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin: 14px 0 0;
+}
+
+.result-label { font-size: 13px; margin: 2px 0 18px; }
+
+.stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stat {
+    background: var(--soft);
+    padding: 15px 8px;
+    border-radius: 12px;
+}
+
+.stat strong { display: block; font-size: 19px; }
+.stat small { color: var(--muted); font-size: 11px; }
+
+.result-detail {
+    font-size: 13px;
+    margin: 16px 0 0;
+    overflow-wrap: anywhere;
+}
+
+.dialog-actions {
+    display: flex;
+    gap: 9px;
+    margin-top: 22px;
+}
+
+.dialog-actions button {
+    flex: 1;
+    margin: 0;
+    padding: 12px 6px;
+    font-size: 13px;
+}
+
+.secondary-btn {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 11px;
+    cursor: pointer;
+    font-weight: 650;
+}
+
+@media (max-width: 380px) {
+    .clock-card, .card { padding: 18px; }
+    .clock { font-size: 30px; }
+    .result-time { font-size: 36px; }
+}
+</style>
+</head>
+
+<body>
+<main class="app">
+
+    <header class="topbar">
+        <div class="brand">Time<span>Pro.</span></div>
+        <button class="icon-btn" id="themeBtn"
+                aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+    </header>
+
+    <section class="clock-card">
+        <div class="eyebrow">Your local time</div>
+        <div class="clock" id="liveClock">00:00:00</div>
+        <div id="liveDate">Loading date...</div>
+    </section>
+
+    <section class="card">
+        <h1>Time Calculator</h1>
+        <p class="subtitle">Calculate your hours, track your shifts, and manage your time.</p>
+
+        <form id="timeForm">
+            <div class="time-grid">
+                <div>
+                    <label for="startTime">🟢 Start time</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div>
+                    <label for="endTime">🔴 End time</label>
+                    <input type="time" id="endTime" required>
+                </div>
+            </div>
+
+            <div class="presets">
+                <button type="button" class="preset" data-start="09:00" data-end="17:00">
+                    9–5 shift
+                </button>
+                <button type="button" class="preset" data-start="09:00" data-end="17:30">
+                    Office day
+                </button>
+                <button type="button" class="preset" data-start="22:00" data-end="06:00">
+                    Night shift
+                </button>
+                <button type="button" class="preset" id="nowBtn">
+                    Use current time
+                </button>
+            </div>
+
+            <label for="breakTime">☕ Break time (minutes)</label>
+            <input type="number" id="breakTime" min="0"
+                   max="1440" step="1" value="0"
+                   placeholder="e.g. 30">
+
+            <p class="break-note">Break time is subtracted from the total duration.</p>
+
+            <button class="primary-btn" type="submit">
+                ✨ Calculate Duration
+            </button>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="section-head">
+            <h2>📋 Recent calculations</h2>
+            <button type="button" class="small-btn" id="clearHistory">
+                Clear history
+            </button>
+        </div>
+        <ul class="history-list" id="historyList">
+            <li><p class="empty">Your calculations will appear here.</p></li>
+        </ul>
+    </section>
+
+    <footer>Made for better time management · TimePro</footer>
+</main>
+
+<dialog id="resultDialog">
+    <div class="result-icon">🎉</div>
+    <h2>Calculation complete!</h2>
+
+    <div class="result-time" id="resultTime">0h 0m</div>
+    <p class="result-label">Net working duration</p>
+
+    <div class="stats">
+        <div class="stat">
+            <strong id="totalMinutes">0</strong>
+            <small>Total minutes</small>
+        </div>
+        <div class="stat">
+            <strong id="decimalHours">0.00</strong>
+            <small>Decimal hours</small>
+        </div>
+    </div>
+
+    <p class="result-detail" id="resultDetail"></p>
+
+    <div class="dialog-actions">
+        <button type="button" class="secondary-btn" id="closeBtn">
+            Close
+        </button>
+        <button type="button" class="primary-btn" id="copyBtn">
+            📋 Copy result
+        </button>
+    </div>
+</dialog>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const form = $("timeForm");
+const dialog = $("resultDialog");
+const startInput = $("startTime");
+const endInput = $("endTime");
+const breakInput = $("breakTime");
+
+let lastResult = "";
+let history = [];
+
+function updateClock() {
+    const now = new Date();
+
+    $("liveClock").textContent = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+
+    $("liveDate").textContent = now.toLocaleDateString([], {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+// Dark mode
+$("themeBtn").addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+
+    const dark = document.body.classList.contains("dark");
+    $("themeBtn").textContent = dark ? "☀️" : "🌙";
+    $("themeBtn").setAttribute(
+        "aria-label",
+        dark ? "Switch to light mode" : "Switch to dark mode"
+    );
+});
+
+// Quick presets
+document.querySelectorAll("[data-start]").forEach(button => {
+    button.addEventListener("click", () => {
+        startInput.value = button.dataset.start;
+        endInput.value = button.dataset.end;
+    });
+});
+
+// Fill the ending time with the current time
+$("nowBtn").addEventListener("click", () => {
+    const now = new Date();
+    const current = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    endInput.value = current;
+
+    if (!startInput.value) {
+        const earlier = new Date(now.getTime() - 60 * 60 * 1000);
+        startInput.value =
+            `${String(earlier.getHours()).padStart(2, "0")}:${String(earlier.getMinutes()).padStart(2, "0")}`;
+    }
+});
+
+// Calculate duration
+form.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const start = startInput.value;
+    const end = endInput.value;
+    const breakMinutes = Number(breakInput.value);
+
+    if (!start || !end) {
+        alert("Please enter both times.");
+        return;
+    }
+
+    if (
+        breakInput.value.trim() === "" ||
+        !Number.isInteger(breakMinutes) ||
+        breakMinutes < 0 ||
+        breakMinutes > 1440
+    ) {
+        alert("Enter a whole number of break minutes between 0 and 1440.");
+        return;
+    }
+
+    const [sh, sm] = start.split(":").map(Number);
+    const [eh, em] = end.split(":").map(Number);
+
+    const startMinutes = sh * 60 + sm;
+    const endMinutes = eh * 60 + em;
+
+    let grossMinutes = endMinutes - startMinutes;
+
+    // If the end is earlier, assume the shift crosses midnight.
+    if (grossMinutes < 0) {
+        grossMinutes += 24 * 60;
+    }
+
+    if (breakMinutes > grossMinutes) {
+        alert("Break time cannot be longer than the total shift duration.");
+        return;
+    }
+
+    const netMinutes = grossMinutes - breakMinutes;
+    const hours = Math.floor(netMinutes / 60);
+    const minutes = netMinutes % 60;
+    const decimal = (netMinutes / 60).toFixed(2);
+
+    $("resultTime").textContent = `${hours}h ${minutes}m`;
+    $("totalMinutes").textContent = netMinutes;
+    $("decimalHours").textContent = decimal;
+
+    $("resultDetail").textContent =
+        `Shift: ${start} – ${end} | Total: ${Math.floor(grossMinutes / 60)}h ${grossMinutes % 60}m | Break: ${breakMinutes} min`;
+
+    lastResult =
+        `TimePro Result\nStart: ${start}\nEnd: ${end}\nGross duration: ${Math.floor(grossMinutes / 60)}h ${grossMinutes % 60}m\nBreak: ${breakMinutes} minutes\nNet duration: ${hours}h ${minutes}m\nTotal minutes: ${netMinutes}\nDecimal hours: ${decimal}`;
+
+    addHistory({
+        start,
+        end,
+        breakMinutes,
+        hours,
+        minutes,
+        netMinutes
+    });
+
+    dialog.showModal();
+});
+
+// Calculation history
+function addHistory(item) {
+    history.unshift(item);
+    history = history.slice(0, 5);
+    renderHistory();
+}
+
+function renderHistory() {
+    const list = $("historyList");
+    list.replaceChildren();
+
+    if (!history.length) {
+        const li = document.createElement("li");
+        const p = document.createElement("p");
+        p.className = "empty";
+        p.textContent = "Your calculations will appear here.";
+        li.appendChild(p);
+        list.appendChild(li);
+        return;
+    }
+
+    history.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "history-item";
+
+        const info = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = `${item.start} – ${item.end}`;
+
+        const sub = document.createElement("small");
+        sub.textContent = `Break: ${item.breakMinutes} min`;
+
+        info.append(title, sub);
+
+        const value = document.createElement("span");
+        value.className = "history-duration";
+        value.textContent = `${item.hours}h ${item.minutes}m`;
+
+        li.append(info, value);
+        list.appendChild(li);
+    });
+}
+
+$("clearHistory").addEventListener("click", () => {
+    history = [];
+    renderHistory();
+});
+
+// Dialog actions
+$("closeBtn").addEventListener("click", () => dialog.close());
+
+dialog.addEventListener("click", event => {
+    if (event.target === dialog) {
+        dialog.close();
+    }
+});
+
+$("copyBtn").addEventListener("click", async () => {
+    try {
+        await navigator.clipboard.writeText(lastResult);
+        $("copyBtn").textContent = "✓ Copied!";
+    } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = lastResult;
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        const copied = document.execCommand("copy");
+        textarea.remove();
+
+        $("copyBtn").textContent = copied ? "✓ Copied!" : "Copy failed";
+    }
+
+    setTimeout(() => {
+        $("copyBtn").textContent = "📋 Copy result";
+    }, 1800);
+});
+</script>
+</body>
+</html>
